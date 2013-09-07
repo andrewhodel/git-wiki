@@ -1,0 +1,102 @@
+var fs = require('fs');
+
+//console.log(process.argv);
+
+var cloneurl = process.argv[2];
+var localdir = process.argv[3];
+
+if (cloneurl == undefined || localdir == undefined) {
+    console.log('#####');
+    console.log('Usage:');
+    console.log('git-wiki cloneurl localdir');
+    console.log('');
+    console.log('where cloneurl is the git repo you wish to clone');
+    console.log('and localdir is the local path you would like to export the html wiki to');
+    console.log('');
+    console.log('both are required');
+    console.log('the localdir will be populated with the ready to display html files');
+    console.log('#####');
+    process.exit(code=0);
+}
+
+// make the local directory
+if (!fs.existsSync(localdir)) {
+    fs.mkdirSync(localdir);
+}
+
+var spawn = require('child_process').spawn;
+
+// check if .git exists in .clone
+if (fs.existsSync(localdir+'/.clone/.git')) {
+    // git already there, just pull
+    var git = spawn('git', ['pull'], {'cwd':localdir+'/.clone'});
+} else {
+    if (fs.existsSync(localdir+'/.clone')) {
+        deleteFolderRecursive(localdir+'/.clone');
+    }
+    var git = spawn('git', ['clone', cloneurl, localdir+'/.clone']);
+}
+
+git.stdout.on('data', function (data) {
+  //console.log('stdout: ' + data);
+});
+
+git.stderr.on('data', function (data) {
+  console.log('git error: ' + data);
+});
+
+git.on('close', function (code) {
+    if (code == 0) {
+        console.log('finished git');
+        wikify(localdir);
+    } else {
+        console.log('git error');
+    }
+});
+
+var walk = function(dir, done) {
+  var results = [];
+  fs.readdir(dir, function(err, list) {
+    if (err) return done(err);
+    var pending = list.length;
+    if (!pending) return done(null, results);
+    list.forEach(function(file) {
+      file = dir + '/' + file;
+      fs.stat(file, function(err, stat) {
+        if (stat && stat.isDirectory()) {
+          walk(file, function(err, res) {
+            results = results.concat(res);
+            if (!--pending) done(null, results);
+          });
+        } else {
+          results.push(file);
+          if (!--pending) done(null, results);
+        }
+      });
+    });
+  });
+};
+
+deleteFolderRecursive = function(path) {
+    var files = [];
+    if( fs.existsSync(path) ) {
+        files = fs.readdirSync(path);
+        files.forEach(function(file,index){
+            var curPath = path + "/" + file;
+            if(fs.statSync(curPath).isDirectory()) { // recurse
+                deleteFolderRecursive(curPath);
+            } else { // delete file
+                fs.unlinkSync(curPath);
+            }
+        });
+        fs.rmdirSync(path);
+    }
+};
+
+function wikify(localdir) {
+    // walk the line
+    walk(localdir+'/.clone/wiki', function(err, results) {
+        if (err) throw err;
+        console.log(results);
+    });
+}
