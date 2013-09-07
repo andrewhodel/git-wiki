@@ -1,0 +1,43 @@
+{
+  "name": "git-wiki",
+  "preferGlobal": true,
+  "version": "0.0.1",
+  "author": "Andrew Hodel <andrewhodel@gmail.com>",
+  "description": "export a git repo as a markdown based html wiki",
+  "contributors": [ 
+    {
+      "name": "Andrew Hodel",
+      "email": "andrewhodel@gmail.com"
+    } 
+  ],
+  "bin": {
+    "git-wiki": "./bin/git-wiki"
+  },
+  "main": "./lib/git-wiki",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrewhodel/git-wiki.git"
+  },
+  "keywords": [
+    "wiki",
+    "git",
+    "github"
+  ],
+  "dependencies" : {
+    "colors"   :  "*",
+    "flatiron" :  "0.1.x",
+    "optimist" :  "0.2.x",
+    "union"    :  "0.1.x",
+    "ecstatic" :  "0.1.x",
+    "plates"   :  "https://github.com/flatiron/plates/tarball/master"
+  },
+  "analyze": false,
+  "devDependencies": {
+  },
+  "bundledDependencies": [
+  ],  
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.6"
+  }
+}
