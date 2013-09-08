@@ -1,4 +1,8 @@
+var sys = require('sys');
+var spawn = require('child_process').spawn;
 var fs = require('fs');
+var exec = require('child_process').exec;
+var markdown = require('markdown').markdown;
 
 //console.log(process.argv);
 
@@ -11,12 +15,14 @@ if (cloneurl == undefined || localdir == undefined) {
     console.log('git-wiki cloneurl localdir');
     console.log('');
     console.log('where cloneurl is the git repo you wish to clone');
-    console.log('and localdir is the local path you would like to export the html wiki to');
+    console.log('and localdir is the output path, the root of your site');
     console.log('');
     console.log('both are required');
-    console.log('the localdir will be populated with the ready to display html files');
+    console.log('the localdir will be an up to date clone of the git repo with all .md files converted to .html');
+    console.log('');
+    console.log('the template files HEADER and FOOTER will be prepended and appended respectively to each .md file when converted to .html');
     console.log('#####');
-    process.exit(code=0);
+    process.exit(code = 0);
 }
 
 // make the local directory
@@ -24,66 +30,43 @@ if (!fs.existsSync(localdir)) {
     fs.mkdirSync(localdir);
 }
 
-var spawn = require('child_process').spawn;
-
-// check if .git exists in .clone
-if (fs.existsSync(localdir+'/.clone/.git')) {
+// check if .git exists in localdir
+if (fs.existsSync(localdir + '/.git')) {
     // git already there, just pull
-    var git = spawn('git', ['pull'], {'cwd':localdir+'/.clone'});
+    var git = spawn('git', ['pull'], {
+        'cwd': localdir
+    });
 } else {
-    if (fs.existsSync(localdir+'/.clone')) {
-        deleteFolderRecursive(localdir+'/.clone');
+    if (fs.existsSync(localdir)) {
+        deleteFolderRecursive(localdir);
     }
-    var git = spawn('git', ['clone', cloneurl, localdir+'/.clone']);
+    var git = spawn('git', ['clone', cloneurl, localdir]);
 }
 
 git.stdout.on('data', function (data) {
-  //console.log('stdout: ' + data);
+    //console.log('stdout: ' + data);
 });
 
 git.stderr.on('data', function (data) {
-  console.log('git error: ' + data);
+    console.log('git error: ' + data);
 });
 
 git.on('close', function (code) {
     if (code == 0) {
         console.log('finished git');
-        wikify(localdir);
+        processGit(localdir);
     } else {
         console.log('git error');
     }
 });
 
-var walk = function(dir, done) {
-  var results = [];
-  fs.readdir(dir, function(err, list) {
-    if (err) return done(err);
-    var pending = list.length;
-    if (!pending) return done(null, results);
-    list.forEach(function(file) {
-      file = dir + '/' + file;
-      fs.stat(file, function(err, stat) {
-        if (stat && stat.isDirectory()) {
-          walk(file, function(err, res) {
-            results = results.concat(res);
-            if (!--pending) done(null, results);
-          });
-        } else {
-          results.push(file);
-          if (!--pending) done(null, results);
-        }
-      });
-    });
-  });
-};
-
-deleteFolderRecursive = function(path) {
+function deleteFolderRecursive(path) {
     var files = [];
-    if( fs.existsSync(path) ) {
+    if (fs.existsSync(path)) {
         files = fs.readdirSync(path);
-        files.forEach(function(file,index){
+        files.forEach(function (file, index) {
             var curPath = path + "/" + file;
-            if(fs.statSync(curPath).isDirectory()) { // recurse
+            if (fs.statSync(curPath).isDirectory()) { // recurse
                 deleteFolderRecursive(curPath);
             } else { // delete file
                 fs.unlinkSync(curPath);
@@ -93,10 +76,81 @@ deleteFolderRecursive = function(path) {
     }
 };
 
-function wikify(localdir) {
+function processGit(localdir) {
+
+    /*
     // walk the line
-    walk(localdir+'/.clone/wiki', function(err, results) {
+    walk(localdir + '/wiki', function (err, results) {
         if (err) throw err;
-        console.log(results);
+        var fileName = results[0];
+
+                fs.stat(fileName, function (error, stats) {
+                        // check for .md file
+                        var ext = fileName.split('.');
+                        if (ext[ext.length-1] == 'md') {
+                            // process md file
+                            fs.open(fileName, "r", function (error, fd) {
+                                var buffer = new Buffer(stats.size);
+                                fs.read(fd, buffer, 0, buffer.length, null, function (error, bytesRead, buffer) {
+                                    var data = buffer.toString("utf8", 0, buffer.length);
+                                    // write .html version
+                                    fs.writeFile(fileName+'.html', markdown.toHTML(data), function (err) { console.log(err); });
+                                    fs.close(fd);
+                                });
+                            });
+                        }
+                });
+
+    });
+    */
+
+var child = exec('git rev-list --objects -g --no-walk --all', {'cwd':localdir},
+  function (error, stdout, stderr) {
+    //console.log('stdout: ' + stdout);
+    //console.log('stderr: ' + stderr);
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    } else {
+        var lines = stdout.split(/\r\n|\r|\n/g);
+        for (var i=0; i<lines.length-1; i++) {
+            processGitObject(lines[i], function (err) {
+
+            });
+        }
+    }
+});
+
+var processGitObject = function(nline, cb) {
+    var line = nline.split(' ');
+    gitShow(line[0], function (data) {
+        console.log('######## OBJECT '+line[0]+' ### TYPE '+data+' ### NAME '+line[1]);
+
+        if (line.length>1) {
+            var ext = line[1].split('.');
+            if (ext[1] == 'md') {
+                // this is a markdown file
+                console.log('processing md');
+                fs.writeFile(localdir+'/'+ext[0]+'.html', markdown.toHTML(fs.readFileSync(localdir+'/'+line[1], 'utf8')), function (err) { console.log(err); });
+            }
+        }
     });
 }
+
+var gitShow = function(hash, cb) {
+
+var child = exec('git cat-file -t '+hash, {'cwd':localdir},
+  function (error, stdout, stderr) {
+    //console.log('stdout: ' + stdout);
+    //console.log('stderr: ' + stderr);
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    } else {
+        cb(stdout.trim());
+    }
+});
+    
+}
+
+String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, "");
+};}

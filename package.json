@@ -24,7 +24,7 @@
     "github"
   ],
   "dependencies" : {
-    "colors"   :  "*"
+    "markdown"   :  "0.5.x"
   },
   "analyze": false,
   "devDependencies": {
