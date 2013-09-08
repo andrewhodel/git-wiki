@@ -33,11 +33,9 @@ the template files HEADER and FOOTER will be prepended and appended respectively
 
 ## HTML sanitization
 
-Trust your editors, everything is open
+The markdown translator will exclude html.
 
 ## Page links, External links and File links
-
-There is no wiki syntax for links, simply create the link in html:
 
 Internal link with absolute path:
 `<a href="/absolute/path/to/file.html">title</a>`
@@ -56,3 +54,19 @@ External link
 Just write the html:
 
 `<img src="image.png" />`
+
+## Use a desktop markdown editor
+
+They will provide a preview of what your document will look like, images too!
+
+* http://mouapp.com/
+* http://sourceforge.net/projects/retext/?source=dlp
+* http://john.nachtimwald.com/2009/08/30/niw-markdown-editor/
+* https://github.com/tam7t/markdown-editor
+* http://codeboje.de/wysiwyg-markdown-editor/
+* https://github.com/eduardonunesp/Anomade
+* https://github.com/cloose/CuteMarkEd
+* https://code.google.com/p/markdownsharp/
+* http://code52.org/DownmarkerWPF/
+* http://uberwriter.wolfvollprecht.de/
+
