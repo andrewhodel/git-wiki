@@ -4,16 +4,13 @@
   "version": "0.0.1",
   "author": "Andrew Hodel <andrewhodel@gmail.com>",
   "description": "export a git repo as a markdown based html wiki",
-  "contributors": [ 
-    {
-      "name": "Andrew Hodel",
-      "email": "andrewhodel@gmail.com"
-    } 
+  "contributors": [
+    "Andrew Hodel <andrewhodel@gmail.com>"
   ],
   "bin": {
-    "git-wiki": "./bin/git-wiki"
+    "git-wiki": "./git-wiki"
   },
-  "main": "./lib/git-wiki",
+  "main": "./git-wiki",
   "repository": {
     "type": "git",
     "url": "https://github.com/andrewhodel/git-wiki.git"
@@ -23,16 +20,19 @@
     "git",
     "github"
   ],
-  "dependencies" : {
-    "markdown"   :  "0.5.x"
+  "dependencies": {
+    "markdown": "0.5.x"
   },
   "analyze": false,
-  "devDependencies": {
-  },
-  "bundledDependencies": [
-  ],  
-  "license": "MIT",
+  "devDependencies": {},
+  "license": "BSD",
   "engines": {
     "node": ">=0.6"
+  },
+  "readmeFilename": "README.md",
+  "gitHead": "c9e0f9f4909ffa410ec8e1e221fbc67e702dc790",
+  "bundleDependencies": [],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

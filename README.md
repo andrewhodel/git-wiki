@@ -5,7 +5,7 @@ export a git repo as a markdown based html wiki
 
 ## Installation
 
-`npm install git-wiki`
+`npm install -g git-wiki`
 
 ## Requirements
 
