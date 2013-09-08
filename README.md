@@ -20,7 +20,7 @@ export a git repo as a markdown based html wiki
 cloneurl = the git repo you wish to clone
 localdir = the output path, the root of your site
 
-*both are required*
+**both required**
 localdir will be an up to date clone of the git repo with all .md files converted to .html
 
 ## Automatic updates
@@ -29,31 +29,29 @@ Run it as a cron job with your desired update frequency.
 
 ## HEADER and FOOTER
 
-the template files HEADER and FOOTER will be prepended and appended respectively to each generated .html file
+The template files HEADER and FOOTER will be prepended and appended respectively to each generated .html file.
 
 ## HTML sanitization
 
-The markdown translator will exclude html.
+The markdown translator will output html entities.
 
 ## Page links, External links and File links
 
 Internal link with absolute path:
-`<a href="/absolute/path/to/file.html">title</a>`
+`[title](/absolute/path/to/file.html)`
 
 Internal link with relative path:
-`<a href="file.html">title</a>`
+`[title](file.html)`
 
 File link:
-`<a href="file.ext">title</a>`
+`[title](file.ext)`
 
 External link
-`<a href="http://external.link">title</a>`
+`[title](http://external.link)`
 
 ## Images
 
-Just write the html:
-
-`<img src="image.png" />`
+`![image](image.jpg)`
 
 ## Use a desktop markdown editor
 
@@ -70,3 +68,7 @@ They will provide a preview of what your document will look like, images too!
 * http://code52.org/DownmarkerWPF/
 * http://uberwriter.wolfvollprecht.de/
 
+
+## sample-git-wiki
+
+https://github.com/andrewhodel/sample-git-wiki is a simple repo you can clone and use as a skeleton for your project.
