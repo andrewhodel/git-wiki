@@ -50,7 +50,7 @@ git.stdout.on('data', function (data) {
 });
 
 git.stderr.on('data', function (data) {
-    console.log('git error: ' + data);
+    console.log('git: ' + data);
 });
 
 var wikiHeader = '';
@@ -94,12 +94,12 @@ function deleteFolderRecursive(path) {
 
 function processGit(localdir) {
 
-var child = exec('git rev-list --objects -g --no-walk --all', {'cwd':localdir},
+var child = exec('git ls-tree --full-tree -r HEAD', {'cwd':localdir},
   function (error, stdout, stderr) {
     //console.log('stdout: ' + stdout);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
-      console.log('exec error: ' + error);
+      console.log('git ls-tree error: ' + error);
     } else {
         var lines = stdout.split(/\r\n|\r|\n/g);
         for (var i=0; i<lines.length-1; i++) {
@@ -111,18 +111,16 @@ var child = exec('git rev-list --objects -g --no-walk --all', {'cwd':localdir},
 });
 
 var processGitObject = function(nline, cb) {
-    var line = nline.split(' ');
-    gitShow(line[0], function (data) {
-        console.log('######## OBJECT '+line[0]+' ### TYPE '+data+' ### NAME '+line[1]);
+    var line = nline.split(/\s+/g);
+    gitShow(line[2], function (data) {
+        console.log('######## OBJECT '+line[2]+' ### TYPE '+data+' ### NAME '+line[3]);
 
         if (line.length>1) {
-            var ext = line[1].split('.');
+            var ext = line[3].split('.');
             if (ext[1] == 'md') {
                 // this is a markdown file
 
-		var fd = fs.readFileSync(localdir+'/'+line[1], 'utf8');
-
-		// handle wikilinks
+		var fd = fs.readFileSync(localdir+'/'+line[3], 'utf8');
 
 		// markdown
                 console.log('processing md');
@@ -143,16 +141,16 @@ var processGitObject = function(nline, cb) {
 		fd = fd.replace(exp,"<a href='$1'>$1</a>");
 
 		// create commit log for this file
-		gitLogFile(line[1], function (d) {
+		gitLogFile(line[3], function (d) {
 			var cl = '<h2>Commit Log - '+ext[0]+'</h2><pre class="commitlog">'+d+'</pre>';
-                	fs.writeFile(localdir+'/'+ext[0]+'.commitlog.html', wikiHeader+cl+wikiFooter, function (err) { console.log(err); });
+                	fs.writeFile(localdir+'/'+ext[0]+'.commitlog.html', wikiHeader+cl+wikiFooter, function (err) { if (err) {console.log(err);} });
 		});
 
 		// add commit log link
-		fd += '<p><a class="commitlink" href="'+ext[0]+'.commitlog.html">Commit Log - '+ext[0]+'</a></p>';
+		fd += '<p><a class="commitlink" href="/'+ext[0]+'.commitlog.html">Commit Log - '+ext[0]+'</a></p>';
 
 		// write html
-                fs.writeFile(localdir+'/'+ext[0]+'.html', wikiHeader+fd+wikiFooter, function (err) { console.log(err); });
+                fs.writeFile(localdir+'/'+ext[0]+'.html', wikiHeader+fd+wikiFooter, function (err) { if (err) {console.log(err);} });
 
             }
         }
@@ -166,7 +164,7 @@ var child = exec('git log -p '+file, {'cwd':localdir},
     //console.log('stdout: ' + stdout);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
-      console.log('exec error: ' + error);
+      console.log('git log error: ' + error);
     } else {
         cb(stdout.trim());
     }
@@ -181,7 +179,7 @@ var child = exec('git cat-file -t '+hash, {'cwd':localdir},
     //console.log('stdout: ' + stdout);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
-      console.log('exec error: ' + error);
+      console.log('git cat-file error: ' + error);
     } else {
         cb(stdout.trim());
     }
