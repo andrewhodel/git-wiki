@@ -23,16 +23,36 @@ localdir = the output path, the root of your site
 *both are required*
 localdir will be an up to date clone of the git repo with all .md files converted to .html
 
-the template files HEADER and FOOTER will be prepended and appended respectively to each .html file
-
 ## Automatic updates
 
 Run it as a cron job with your desired update frequency.
 
-## Wiki links
+## HEADER and FOOTER
 
-[[relative/path/to/file]]
+the template files HEADER and FOOTER will be prepended and appended respectively to each generated .html file
 
-[[relative/path/to/file|title]]
+## HTML sanitization
 
-The file must be named exactly as it is in the wiki without an extension.
+Trust your editors, everything is open
+
+## Page links, External links and File links
+
+There is no wiki syntax for links, simply create the link in html:
+
+Internal link with absolute path:
+`<a href="/absolute/path/to/file.html">title</a>`
+
+Internal link with relative path:
+`<a href="file.html">title</a>`
+
+File link:
+`<a href="file.ext">title</a>`
+
+External link
+`<a href="http://external.link">title</a>`
+
+## Images
+
+Just write the html:
+
+`<img src="image.png" />`
