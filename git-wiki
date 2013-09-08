@@ -119,11 +119,59 @@ var processGitObject = function(nline, cb) {
             var ext = line[1].split('.');
             if (ext[1] == 'md') {
                 // this is a markdown file
+
+		var fd = fs.readFileSync(localdir+'/'+line[1], 'utf8');
+
+		// handle wikilinks
+
+		// markdown
                 console.log('processing md');
-                fs.writeFile(localdir+'/'+ext[0]+'.html', wikiHeader+markdown.toHTML(fs.readFileSync(localdir+'/'+line[1], 'utf8'))+wikiFooter, function (err) { console.log(err); });
+		fd = markdown.toHTML(fd);
+
+		// internal links
+		var exp = /\[\[(([^\]|]|\](?=[^\]]))*)(\|(([^\]]|\](?=[^\]]))*))?\]\]/ig
+		fd = fd.replace(exp, function (match, p1, p2, p3, p4, offset, string) {
+			if (p4) {
+				return '<a href="'+p1+'.html">'+p4+'</a>';
+			} else {
+				return '<a href="'+p1+'.html">'+p1+'</a>';
+			}
+		});
+
+		// urlize
+		var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+		fd = fd.replace(exp,"<a href='$1'>$1</a>");
+
+		// create commit log for this file
+		gitLogFile(line[1], function (d) {
+			var cl = '<h2>Commit Log - '+ext[0]+'</h2><pre class="commitlog">'+d+'</pre>';
+                	fs.writeFile(localdir+'/'+ext[0]+'.commitlog.html', wikiHeader+cl+wikiFooter, function (err) { console.log(err); });
+		});
+
+		// add commit log link
+		fd += '<p><a class="commitlink" href="'+ext[0]+'.commitlog.html">Commit Log - '+ext[0]+'</a></p>';
+
+		// write html
+                fs.writeFile(localdir+'/'+ext[0]+'.html', wikiHeader+fd+wikiFooter, function (err) { console.log(err); });
+
             }
         }
     });
+}
+
+var gitLogFile = function(file, cb) {
+
+var child = exec('git log -p '+file, {'cwd':localdir},
+  function (error, stdout, stderr) {
+    //console.log('stdout: ' + stdout);
+    //console.log('stderr: ' + stderr);
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    } else {
+        cb(stdout.trim());
+    }
+});
+    
 }
 
 var gitShow = function(hash, cb) {
