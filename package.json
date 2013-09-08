@@ -10,7 +10,6 @@
   "bin": {
     "git-wiki": "./git-wiki"
   },
-  "main": "./git-wiki",
   "repository": {
     "type": "git",
     "url": "https://github.com/andrewhodel/git-wiki.git"
