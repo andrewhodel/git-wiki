@@ -51,9 +51,23 @@ git.stderr.on('data', function (data) {
     console.log('git error: ' + data);
 });
 
+var wikiHeader = '';
+var wikiFooter = '';
+
 git.on('close', function (code) {
     if (code == 0) {
         console.log('finished git');
+
+        // check for HEADER and FOOTER
+
+        if (fs.existsSync(localdir+'/HEADER')) {
+            wikiHeader = fs.readFileSync(localdir+'/HEADER', 'utf8');
+        }
+
+        if (fs.existsSync(localdir+'/FOOTER')) {
+            wikiFooter = fs.readFileSync(localdir+'/FOOTER', 'utf8');
+        }
+
         processGit(localdir);
     } else {
         console.log('git error');
@@ -77,32 +91,6 @@ function deleteFolderRecursive(path) {
 };
 
 function processGit(localdir) {
-
-    /*
-    // walk the line
-    walk(localdir + '/wiki', function (err, results) {
-        if (err) throw err;
-        var fileName = results[0];
-
-                fs.stat(fileName, function (error, stats) {
-                        // check for .md file
-                        var ext = fileName.split('.');
-                        if (ext[ext.length-1] == 'md') {
-                            // process md file
-                            fs.open(fileName, "r", function (error, fd) {
-                                var buffer = new Buffer(stats.size);
-                                fs.read(fd, buffer, 0, buffer.length, null, function (error, bytesRead, buffer) {
-                                    var data = buffer.toString("utf8", 0, buffer.length);
-                                    // write .html version
-                                    fs.writeFile(fileName+'.html', markdown.toHTML(data), function (err) { console.log(err); });
-                                    fs.close(fd);
-                                });
-                            });
-                        }
-                });
-
-    });
-    */
 
 var child = exec('git rev-list --objects -g --no-walk --all', {'cwd':localdir},
   function (error, stdout, stderr) {
@@ -130,7 +118,7 @@ var processGitObject = function(nline, cb) {
             if (ext[1] == 'md') {
                 // this is a markdown file
                 console.log('processing md');
-                fs.writeFile(localdir+'/'+ext[0]+'.html', markdown.toHTML(fs.readFileSync(localdir+'/'+line[1], 'utf8')), function (err) { console.log(err); });
+                fs.writeFile(localdir+'/'+ext[0]+'.html', wikiHeader+markdown.toHTML(fs.readFileSync(localdir+'/'+line[1], 'utf8'))+wikiFooter, function (err) { console.log(err); });
             }
         }
     });
