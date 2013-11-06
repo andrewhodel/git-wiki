@@ -104,7 +104,7 @@ function feedItem(title, author, authorThumb, authorLink, data, link, created) {
     } else {
 
 
-    created = new Date(created).getTime()/1000;
+    created = Math.round(new Date(created).getTime()/1000);
 
     var h = '<div class="feedItem">';
     h += '<div class="feedAuthor"><a href="' + authorLink + '">' + author;
