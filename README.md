@@ -21,11 +21,18 @@ cloneurl = the git repo you wish to clone
 localdir = the output path, the root of your site
 
 **both required**
-localdir will be an up to date clone of the git repo with all .md files converted to .html
 
 ## Automatic updates
 
 Run it as a cron job with your desired update frequency.
+
+## Filetypes from clone repo
+
+Files from the clone or source repo are processed by their extension:
+
+.md - markdown syntax to be processed
+
+.feed - list of RSS and G+ feeds to be fetched and displayed
 
 ## HEADER and FOOTER
 
