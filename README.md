@@ -11,7 +11,12 @@ export a git repo as a markdown based html wiki
 
 * Linux
 * Git
-* markdown - node module
+
+## Node modules
+
+* marked
+* feed-read
+* async
 
 ## Usage
 
@@ -22,9 +27,7 @@ localdir = the output path, the root of your site
 
 **both required**
 
-## Automatic updates
-
-Run it as a cron job with your desired update frequency.
+Run script with forever, it will update the site every hour
 
 ## Filetypes from clone repo
 

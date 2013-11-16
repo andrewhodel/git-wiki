@@ -32,54 +32,65 @@ if (cloneurl == undefined || localdir == undefined) {
     process.exit(code = 0);
 }
 
-// make the local directory
-if (!fs.existsSync(localdir)) {
-    fs.mkdirSync(localdir);
-}
-
-// check if .git exists in localdir
-if (fs.existsSync(localdir + '/.git')) {
-    // git already there, just pull
-    var git = spawn('git', ['pull'], {
-        'cwd': localdir
-    });
-} else {
-    if (fs.existsSync(localdir)) {
-        deleteFolderRecursive(localdir);
-    }
-    var git = spawn('git', ['clone', cloneurl, localdir]);
-}
-
-git.stdout.on('data', function (data) {
-    //console.log('stdout: ' + data);
-});
-
-git.stderr.on('data', function (data) {
-    console.log('git: ' + data);
-});
-
 var wikiHeader = '';
 var wikiFooter = '';
 
-git.on('close', function (code) {
-    if (code == 0) {
-        console.log('finished git');
+var mainLoop = function () {
 
-        // check for HEADER and FOOTER
-
-        if (fs.existsSync(localdir + '/HEADER')) {
-            wikiHeader = fs.readFileSync(localdir + '/HEADER', 'utf8');
-        }
-
-        if (fs.existsSync(localdir + '/FOOTER')) {
-            wikiFooter = fs.readFileSync(localdir + '/FOOTER', 'utf8');
-        }
-
-        processGit(localdir);
-    } else {
-        console.log('git error');
+    // make the local directory
+    if (!fs.existsSync(localdir)) {
+        fs.mkdirSync(localdir);
     }
-});
+
+    // check if .git exists in localdir
+    if (fs.existsSync(localdir + '/.git')) {
+        // git already there, just pull
+        var git = spawn('git', ['pull'], {
+            'cwd': localdir
+        });
+    } else {
+        if (fs.existsSync(localdir)) {
+            deleteFolderRecursive(localdir);
+        }
+        var git = spawn('git', ['clone', cloneurl, localdir]);
+    }
+
+    git.stdout.on('data', function (data) {
+        //console.log('stdout: ' + data);
+    });
+
+    git.stderr.on('data', function (data) {
+        console.log('git: ' + data);
+    });
+
+    git.on('close', function (code) {
+        if (code == 0) {
+            console.log('finished git');
+
+            // check for HEADER and FOOTER
+
+            if (fs.existsSync(localdir + '/HEADER')) {
+                wikiHeader = fs.readFileSync(localdir + '/HEADER', 'utf8');
+            }
+
+            if (fs.existsSync(localdir + '/FOOTER')) {
+                wikiFooter = fs.readFileSync(localdir + '/FOOTER', 'utf8');
+            }
+
+            processGit(localdir);
+        } else {
+            console.log('git error');
+        }
+    });
+
+}
+
+mainLoop();
+
+// run hourly
+setInterval("mainLoop", 3600000);
+
+
 
 function deleteFolderRecursive(path) {
     var files = [];
@@ -100,26 +111,29 @@ function deleteFolderRecursive(path) {
 function feedItem(title, author, authorThumb, authorLink, data, link, created) {
 
     if (title == '' || data == '') {
-	return null;
+        return null;
     } else {
 
 
-    created = Math.round(new Date(created).getTime()/1000);
+        created = Math.round(new Date(created).getTime() / 1000);
 
-    var h = '<div class="feedItem">';
-    h += '<div class="feedAuthor"><a href="' + authorLink + '">' + author;
+        var h = '<div class="feedItem">';
+        h += '<div class="feedAuthor"><a href="' + authorLink + '">' + author;
 
-	if (authorThumb) {
-		h += '<br /><img src="'+authorThumb+'" />';
-	}
+        if (authorThumb) {
+            h += '<br /><img src="' + authorThumb + '" />';
+        }
 
-    h += '</a></div>';
-    h += '<div class="feedRBox">';
-    h += '<div class="feedTitle"><a href="' + link + '">' + title + '</a></div><div class="feedCreated">'+created+'</div>';
-    h += '<div class="feedData">' + data + '</div>';
-    h += '</div>';
-    h += '</div>';
-    return {'created':created,'data':h};
+        h += '</a></div>';
+        h += '<div class="feedRBox">';
+        h += '<div class="feedTitle"><a href="' + link + '">' + title + '</a></div><div class="feedCreated">' + created + '</div>';
+        h += '<div class="feedData">' + data + '</div>';
+        h += '</div>';
+        h += '</div>';
+        return {
+            'created': created,
+            'data': h
+        };
 
     }
 
@@ -161,15 +175,15 @@ function iterateFeeds(feed, cb) {
                     for (var c = 0; c < plusR.items.length; c++) {
                         var ti = plusR.items[c];
 
-			if (Array.isArray(ti.object.attachments)) {
+                        if (Array.isArray(ti.object.attachments)) {
 
-				for (var m=0; m<ti.object.attachments.length; m++) {
-					if (typeof ti.object.attachments[m].image !== 'undefined') {
-						ti.object.content += '<br /><a href="'+ti.object.attachments[m].url+'"><img src="'+ti.object.attachments[m].image.url+'" /></a>';
-					}
-				}
+                            for (var m = 0; m < ti.object.attachments.length; m++) {
+                                if (typeof ti.object.attachments[m].image !== 'undefined') {
+                                    ti.object.content += '<br /><a href="' + ti.object.attachments[m].url + '"><img src="' + ti.object.attachments[m].image.url + '" /></a>';
+                                }
+                            }
 
-			}
+                        }
 
                         r.push(feedItem(ti.title, ti.actor.displayName, ti.actor.image.url, ti.actor.url, ti.object.content, ti.url, ti.published));
                     }
@@ -189,25 +203,25 @@ function iterateFeeds(feed, cb) {
 
     } else if (feed.type == 'rss') {
 
-feedread(feed.feed, function(err, articles) {
-  if (err) throw err;
-  // Each article has the following properties:
-  // 
-  //   * "title"     - The article title (String).
-  //   * "author"    - The author's name (String).
-  //   * "link"      - The original article link (String).
-  //   * "content"   - The HTML content of the article (String).
-  //   * "published" - The date that the article was published (Date).
-  //   * "feed"      - {name, source, link}
-  // 
-	r = [];
-	for (var i=0; i<articles.length; i++) {
-		if (i<3) {
-			r.push(feedItem(articles[i].title, articles[i].author, null, articles[i].link, articles[i].content, articles[i].link, articles[i].published));
-		}
-	}
-	cb(null, r);
-});
+        feedread(feed.feed, function (err, articles) {
+            if (err) throw err;
+            // Each article has the following properties:
+            // 
+            //   * "title"     - The article title (String).
+            //   * "author"    - The author's name (String).
+            //   * "link"      - The original article link (String).
+            //   * "content"   - The HTML content of the article (String).
+            //   * "published" - The date that the article was published (Date).
+            //   * "feed"      - {name, source, link}
+            // 
+            r = [];
+            for (var i = 0; i < articles.length; i++) {
+                if (i < 3) {
+                    r.push(feedItem(articles[i].title, articles[i].author, null, articles[i].link, articles[i].content, articles[i].link, articles[i].published));
+                }
+            }
+            cb(null, r);
+        });
 
     } else {
         cb(null, 'unsupported feed type ' + feed.type);
@@ -251,61 +265,61 @@ function processGit(localdir) {
                     // markdown
                     console.log('processing md');
 
-                            var mo = {
-                                gfm: true,
-                                highlight: false,
-                                tables: true,
-                                breaks: false,
-                                pedantic: false,
-                                sanitize: true,
-                                smartLists: true,
-                                smartypants: false,
-                                langPrefix: 'lang-'
-                            };
+                    var mo = {
+                        gfm: true,
+                        highlight: false,
+                        tables: true,
+                        breaks: false,
+                        pedantic: false,
+                        sanitize: true,
+                        smartLists: true,
+                        smartypants: false,
+                        langPrefix: 'lang-'
+                    };
 
-			marked(fd, mo, function (err, content) {
+                    marked(fd, mo, function (err, content) {
 
-                    		saveFile(localdir, ext[0], content);
-			});
+                        saveFile(localdir, ext[0], content);
+                    });
 
                 } else if (ext[1] == 'feed') {
 
                     // this is a feed list json file
 
-			var feeds = require(localdir + '/' + line[3]);
+                    var feeds = require(localdir + '/' + line[3]);
 
-			console.log(feeds);
+                    console.log(feeds);
 
-                        async.map(feeds, iterateFeeds, function (err, results) {
+                    async.map(feeds, iterateFeeds, function (err, results) {
 
-                            console.log('feed map done');
-			    var a = [];
-                            for (var i=0; i<results.length; i++) {
-                                if (Array.isArray(results[i])) {
-                                    // each item in results[i] is a formatted html feed block
-				    for (var c=0; c<results[i].length; c++) {
-					if (results[i][c] !== null) {
-						a.push(results[i][c]);
-					} else {
-						console.log(results[i][c]);
-					}
-				    }
-                                } else {
-                                    // nope
+                        console.log('feed map done');
+                        var a = [];
+                        for (var i = 0; i < results.length; i++) {
+                            if (Array.isArray(results[i])) {
+                                // each item in results[i] is a formatted html feed block
+                                for (var c = 0; c < results[i].length; c++) {
+                                    if (results[i][c] !== null) {
+                                        a.push(results[i][c]);
+                                    } else {
+                                        console.log(results[i][c]);
+                                    }
                                 }
+                            } else {
+                                // nope
                             }
+                        }
 
-a.sortOn('created');
-a.reverse();
+                        a.sortOn('created');
+                        a.reverse();
 
-var ah = '<div class="feedList">';
+                        var ah = '<div class="feedList">';
 
-for (var i=0; i<a.length; i++) {
-	ah += a[i].data;
-}
+                        for (var i = 0; i < a.length; i++) {
+                            ah += a[i].data;
+                        }
 
-			    saveFile(localdir, ext[0], ah+'</div>');
-                        });
+                        saveFile(localdir, ext[0], ah + '</div>');
+                    });
 
                 }
 
@@ -366,7 +380,7 @@ function saveFile(localdir, path, data) {
     data += '<p><a class="commitlink" href="/' + path + '.commitlog.html">Commit Log - ' + path + '</a></p>';
 
     // write html
-    fs.writeFile(localdir+'/'+path + '.html', wikiHeader + data + wikiFooter, function (err) {
+    fs.writeFile(localdir + '/' + path + '.html', wikiHeader + data + wikiFooter, function (err) {
         if (err) {
             console.log(err);
         }
@@ -374,11 +388,11 @@ function saveFile(localdir, path, data) {
 
 }
 
-Array.prototype.sortOn = function(key){
-    this.sort(function(a, b){
-        if(a[key] < b[key]){
+Array.prototype.sortOn = function (key) {
+    this.sort(function (a, b) {
+        if (a[key] < b[key]) {
             return -1;
-        }else if(a[key] > b[key]){
+        } else if (a[key] > b[key]) {
             return 1;
         }
         return 0;

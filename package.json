@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "marked": "0.2.x",
-    "feedparser": "0.16.x",
+    "feed-read": "0.0.x",
     "async": "0.2.x"
   },
   "analyze": false,
