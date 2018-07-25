@@ -20,7 +20,7 @@
     "github"
   ],
   "dependencies": {
-    "marked": "0.2.x",
+    "marked": "0.4.x",
     "feed-read": "0.0.x",
     "async": "0.2.x"
   },
